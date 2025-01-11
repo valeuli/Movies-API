@@ -1,7 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from app.database_settings import SessionLocal
 from app.main import app
 from app.services.user_service import UserService
 from app.utils.password_hasher import BcryptPasswordHasher
@@ -17,7 +16,6 @@ class TestCreateUser:
 
     @pytest.fixture(autouse=True)
     def setup(self, test_db):
-        app.dependency_overrides[SessionLocal] = lambda: test_db
         self.db = test_db
         self.service = UserService(self.db)
         self.password = "password123"
@@ -47,7 +45,7 @@ class TestCreateUser:
         )
 
         assert response.status_code == 201
-        assert response.json() == {"msg": "User created"}
+        assert response.json() == {"detail": "User created"}
 
         created_user = self.service.get_user_by_email(user_email)
         assert created_user is not None
@@ -66,7 +64,12 @@ class TestCreateUser:
 
         assert response.status_code == 400
         assert response.json() == {
-            "error": {"code": "USER_ALREADY_EXISTS", "message": "User already exists."}
+            "detail": {
+                "error": {
+                    "code": "USER_ALREADY_EXISTS",
+                    "message": "User already exists",
+                }
+            }
         }
 
     def test_create_user_missing_email(self):
@@ -80,9 +83,13 @@ class TestCreateUser:
             "/user/create/",
             json=invalid_user_data,
         )
-
+        detail_response = response.json()["detail"]
         assert response.status_code == 422
-        assert "email" in response.json()["detail"][0]["loc"]
+        assert detail_response[0]["error"]["code"] == "MISSING"
+        assert (
+            detail_response[0]["error"]["message"]
+            == "Error in field 'email': Field required"
+        )
 
     def test_create_user_invalid_email(self):
         """
@@ -97,7 +104,10 @@ class TestCreateUser:
         )
 
         assert response.status_code == 422
-        assert "email" in response.json()["detail"][0]["loc"]
+        assert (
+            response.json()["detail"][0]["error"]["message"]
+            == "Error in field 'email': value is not a valid email address: An email address must have an @-sign."
+        )
 
     def test_create_user_missing_password(self):
         """
@@ -112,7 +122,10 @@ class TestCreateUser:
         )
 
         assert response.status_code == 422
-        assert "password" in response.json()["detail"][0]["loc"]
+        assert (
+            response.json()["detail"][0]["error"]["message"]
+            == "Error in field 'password': Field required"
+        )
 
     def test_create_user_missing_first_name(self):
         """
@@ -127,7 +140,10 @@ class TestCreateUser:
         )
 
         assert response.status_code == 422
-        assert "first_name" in response.json()["detail"][0]["loc"]
+        assert (
+            response.json()["detail"][0]["error"]["message"]
+            == "Error in field 'first_name': Field required"
+        )
 
     def test_create_user_missing_last_name(self):
         """
@@ -142,4 +158,7 @@ class TestCreateUser:
         )
 
         assert response.status_code == 422
-        assert "last_name" in response.json()["detail"][0]["loc"]
+        assert (
+            response.json()["detail"][0]["error"]["message"]
+            == "Error in field 'last_name': Field required"
+        )
