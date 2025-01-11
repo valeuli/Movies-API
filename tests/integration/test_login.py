@@ -1,7 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from app.database_settings import SessionLocal
 from app.main import app
 from app.services.user_service import UserService
 from tests.testing_helper import SetupHelper
@@ -16,7 +15,6 @@ class TestLogin:
 
     @pytest.fixture(autouse=True)
     def setup(self, test_db):
-        app.dependency_overrides[SessionLocal] = lambda: test_db
         self.db = test_db
         self.service = UserService(self.db)
         self.user_email = "user1@test.com"
@@ -36,7 +34,7 @@ class TestLogin:
         )
 
         assert response.status_code == 200
-        assert "access_token" in response.json()
+        assert "access_token" in response.json()["detail"]
 
     def test_login_failure_wrong_password(self):
         """
@@ -49,7 +47,9 @@ class TestLogin:
 
         assert response.status_code == 401
         assert response.json() == {
-            "error": {"code": "AUTH_ERROR", "message": "Invalid email or password"}
+            "detail": {
+                "error": {"code": "AUTH_ERROR", "message": "Invalid email or password"}
+            }
         }
 
     def test_login_failure_wrong_email(self):
@@ -63,7 +63,9 @@ class TestLogin:
 
         assert response.status_code == 401
         assert response.json() == {
-            "error": {"code": "AUTH_ERROR", "message": "Invalid email or password"}
+            "detail": {
+                "error": {"code": "AUTH_ERROR", "message": "Invalid email or password"}
+            }
         }
 
     def test_login_failure_no_existing_user(self):
@@ -80,7 +82,9 @@ class TestLogin:
 
         assert response.status_code == 401
         assert response.json() == {
-            "error": {"code": "AUTH_ERROR", "message": "Invalid email or password"}
+            "detail": {
+                "error": {"code": "AUTH_ERROR", "message": "Invalid email or password"}
+            }
         }
 
     def test_invalid_email(self):
@@ -94,8 +98,8 @@ class TestLogin:
 
         assert response.status_code == 422
         assert (
-            response.json()["detail"][0]["msg"]
-            == "value is not a valid email address: An email address must have an @-sign."
+            response.json()["detail"][0]["error"]["message"]
+            == "Error in field 'email': value is not a valid email address: An email address must have an @-sign."
         )
 
     def test_without_password(self):
@@ -104,16 +108,10 @@ class TestLogin:
         """
         response = client.post("/user/login/", json={"email": "test@example.com"})
         assert response.status_code == 422
-        assert response.json() == {
-            "detail": [
-                {
-                    "input": {"email": "test@example.com"},
-                    "loc": ["body", "password"],
-                    "msg": "Field required",
-                    "type": "missing",
-                }
-            ]
-        }
+        assert (
+            response.json()["detail"][0]["error"]["message"]
+            == "Error in field 'password': Field required"
+        )
 
     def test_without_email(self):
         """
@@ -121,13 +119,7 @@ class TestLogin:
         """
         response = client.post("/user/login/", json={"password": self.password})
         assert response.status_code == 422
-        assert response.json() == {
-            "detail": [
-                {
-                    "input": {"password": "password123"},
-                    "loc": ["body", "email"],
-                    "msg": "Field required",
-                    "type": "missing",
-                }
-            ]
-        }
+        assert (
+            response.json()["detail"][0]["error"]["message"]
+            == "Error in field 'email': Field required"
+        )

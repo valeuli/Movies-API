@@ -19,3 +19,18 @@ def create_access_token(data: dict) -> str:
     return jwt.encode(
         to_encode, os.environ["SECRET_KEY"], algorithm=os.environ["ALGORITHM"]
     )
+
+
+def decode_access_token(token: str) -> dict | None:
+    """
+    Decodes and validates a JWT token, returning a dict or None if the token is invalid.
+    """
+    try:
+        payload = jwt.decode(
+            token,
+            os.environ["SECRET_KEY"],
+            algorithms=[os.environ["ALGORITHM"]],
+        )
+        return payload
+    except jwt.exceptions.PyJWTError as e:
+        return None

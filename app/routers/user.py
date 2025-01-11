@@ -1,5 +1,4 @@
-from fastapi import APIRouter
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, HTTPException
 
 from app.database_settings import SessionLocal
 from app.schemas.login import Login
@@ -23,15 +22,14 @@ def login(login_data: Login):
     if not user or not BcryptPasswordHasher.verify_password(
         login_data.password, user.password
     ):
-        content = {
+        detail = {
             "error": {"code": "AUTH_ERROR", "message": "Invalid email or password"}
         }
-        return JSONResponse(content=content, status_code=401)
+        raise HTTPException(status_code=401, detail=detail)
 
-    access_token = create_access_token(data={"sub": user.email})
-    return JSONResponse(
-        content={"access_token": access_token, "token_type": "bearer"}, status_code=200
-    )
+    access_token = create_access_token(data={"email": user.email})
+    content = {"detail": {"access_token": access_token, "token_type": "bearer"}}
+    return content
 
 
 @user_router.post("/create", status_code=201)
@@ -43,11 +41,11 @@ def create_user(user_data: User):
     service = UserService(db)
     existing_user = service.get_user_by_email(user_data.email)
     if existing_user:
-        content = {
-            "error": {"code": "USER_ALREADY_EXISTS", "message": "User already exists."}
+        detail = {
+            "error": {"code": "USER_ALREADY_EXISTS", "message": "User already exists"},
         }
-        return JSONResponse(content=content, status_code=400)
+        raise HTTPException(status_code=400, detail=detail)
 
     user_data.password = BcryptPasswordHasher.hash_password(user_data.password)
     service.create_object(user_data.model_dump())
-    return JSONResponse(content={"msg": "User created"}, status_code=201)
+    return {"detail": "User created"}

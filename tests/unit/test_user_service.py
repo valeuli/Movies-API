@@ -1,8 +1,6 @@
 import pytest
 from sqlalchemy.orm import Session
 
-from app.database_settings import SessionLocal
-from app.main import app
 from app.services.user_service import UserService
 from tests.testing_helper import SetupHelper
 
@@ -17,8 +15,6 @@ class TestUserService:
         """
         Initial configuration for every test.
         """
-        # Mock de la sesión de base de datos
-        app.dependency_overrides[SessionLocal] = lambda: test_db
         self.db = test_db
         self.user_service = UserService(db=self.db)
         self.user_email = "user1@test.com"

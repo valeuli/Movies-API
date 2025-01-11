@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Database cache
+*.sqlite3
+*.db
+
+# IDE File
+.idea/
+.vscode/
+*.code-workspace

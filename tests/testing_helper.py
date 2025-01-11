@@ -9,8 +9,8 @@ class SetupHelper:
     @staticmethod
     def create_test_user(
         service,
-        email: str,
-        password: str,
+        email: str = "user@example.com",
+        password: str = "password",
         first_name: str = "Test",
         last_name: str = "User",
     ):
