@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
 
+from app.repositories.get_repository import get_repository
 from app.models.movie import Movie
-from app.services.crud_service import CRUDService
 
 
-class MovieService(CRUDService[Movie]):
+class MovieService:
     def __init__(self, db: Session):
-        super().__init__(db, Movie)
+        self.repository = get_repository(db, Movie)

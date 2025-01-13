@@ -29,8 +29,7 @@ class TestUpdatePrivateMovie:
         )
         self.valid_token = create_access_token({"email": self.user_email})
         self.movie_service = MovieService(self.test_db)
-        self.movie = MovieService.create_object(
-            self.movie_service,
+        self.movie = self.movie_service.repository.create_object(
             {
                 "title": "Test Movie",
                 "description": "Original Description",
@@ -109,3 +108,19 @@ class TestUpdatePrivateMovie:
         assert response.status_code == 401
         error_detail = response.json()["detail"]
         assert error_detail == "Not authenticated"
+
+    def test_update_private_movie_without_data(self):
+        """
+        Test to successfully update a private movie owned by the authenticated user.
+        """
+        headers = {"Authorization": f"Bearer {self.valid_token}"}
+        update_data = {}
+
+        response = client.put(
+            f"/movie/{self.movie.id}", json=update_data, headers=headers
+        )
+        error_detail = response.json()["detail"]
+
+        assert response.status_code == 400
+        assert error_detail["error"]["code"] == "MISSING"
+        assert error_detail["error"]["message"] == "There is not data to update."

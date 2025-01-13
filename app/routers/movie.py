@@ -53,8 +53,7 @@ def create_movie(
     movi_service = MovieService(session_database)
     movie_data_dict = movie_data.model_dump()
     movie_data_dict["user_id"] = current_user.id
-
-    new_movie = movi_service.create_object(movie_data_dict)
+    new_movie = movi_service.repository.create_object(movie_data_dict)
     return new_movie
 
 
@@ -67,14 +66,14 @@ def get_public_movies(
     Retrieve all public movies with pagination.
     """
     session_database = SessionLocal()
-    movi_service = MovieService(session_database)
+    movie_service = MovieService(session_database)
     offset = (page - 1) * page_size
-    public_movies = movi_service.get_objects_by_filters(
+    public_movies = movie_service.repository.get_objects_by_filters(
         filters={"is_public": True},
         offset=offset,
         limit=page_size,
     )
-    return public_movies
+    return movie_service.repository.to_schema(public_movies, MovieResponse)
 
 
 @movie_router.get("/user", response_model=List[MovieResponse])
@@ -98,29 +97,40 @@ def get_user_movies(
 
     movie_service = MovieService(session_database)
     offset = (page - 1) * page_size
-    user_movies = movie_service.get_objects_by_filters(
+    user_movies = movie_service.repository.get_objects_by_filters(
         filters=filters,
         offset=offset,
         limit=page_size,
     )
 
-    return user_movies
+    return movie_service.repository.to_schema(user_movies, MovieResponse)
 
 
 @movie_router.put("/{movie_id}", response_model=MovieResponse)
 def update_private_movie(
-    movie_id: int,
+    movie_id: int | str,
     movie_data: dict,
     token: str = Depends(oauth2_scheme),
 ):
     """
     Update at least one field of a private movie owned by the authenticated user.
     """
+    if not movie_data:
+        detail = {
+            "error": {
+                "code": "MISSING",
+                "message": "There is not data to update.",
+            }
+        }
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=detail,
+        )
     session_database = SessionLocal()
     current_user = validate_current_user(token, session_database)
 
     movie_service = MovieService(session_database)
-    movie = movie_service.get_object(movie_id)
+    movie = movie_service.repository.get_object(movie_id)
 
     if not movie:
         detail = {
@@ -131,7 +141,8 @@ def update_private_movie(
         }
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
 
-    if not movie.is_public and movie.user_id != current_user.id:
+    movie_obj = movie_service.repository.to_schema(movie, MovieResponse)
+    if not movie_obj.is_public and movie_obj.user_id != current_user.id:
         detail = {
             "error": {
                 "code": "UNAUTHORIZED",
@@ -143,13 +154,13 @@ def update_private_movie(
             detail=detail,
         )
 
-    updated_movie = movie_service.update_object(movie_id, movie_data)
-    return updated_movie
+    updated_movie = movie_service.repository.update_object(movie_id, movie_data)
+    return movie_service.repository.to_schema(updated_movie, MovieResponse)
 
 
 @movie_router.delete("/{movie_id}/delete", status_code=204)
 def delete_movie(
-    movie_id: int,
+    movie_id: int | str,
     token: str = Depends(oauth2_scheme),
 ):
     """
@@ -159,7 +170,7 @@ def delete_movie(
     current_user = validate_current_user(token, session_database)
 
     movie_service = MovieService(session_database)
-    movie = movie_service.get_object(movie_id)
+    movie = movie_service.repository.get_object(movie_id)
 
     if not movie:
         detail = {
@@ -170,7 +181,7 @@ def delete_movie(
         }
 
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
-
+    movie = movie_service.repository.to_schema(movie, MovieResponse)
     if movie.user_id != current_user.id:
         detail = {
             "error": {
@@ -183,5 +194,5 @@ def delete_movie(
             detail=detail,
         )
 
-    movie_service.delete_object(movie_id)
+    movie_service.repository.delete_object(movie_id)
     return {"detail": "Movie deleted successfully"}

@@ -16,7 +16,7 @@ class TestUserService:
         Initial configuration for every test.
         """
         self.db = test_db
-        self.user_service = UserService(db=self.db)
+        self.user_service = UserService(self.db)
         self.user_email = "user1@test.com"
         self.password = "password123"
         self.created_user = SetupHelper.create_test_user(

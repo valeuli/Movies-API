@@ -15,14 +15,14 @@ class MovieCreate(BaseModel):
 
 
 class MovieResponse(BaseModel):
-    id: int
+    id: str | int
     title: str
     description: str
     publication_year: int
     genre: GenreEnum
     rating: float
     is_public: bool
-    user_id: int
+    user_id: str | int | None
     created_at: datetime
 
     class ConfigDict:

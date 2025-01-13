@@ -47,7 +47,11 @@ class Movie(Base):
     genre = Column(Enum(GenreEnum), nullable=False)
     rating = Column(Float, nullable=True)
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=datetime.now(timezone.utc))
+    updated_at = Column(
+        DateTime,
+        default=datetime.now(timezone.utc),
+        onupdate=datetime.now(timezone.utc),
+    )
     is_public = Column(Boolean, default=False)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=True)
     user = relationship("User", back_populates="movies", lazy="joined", uselist=False)

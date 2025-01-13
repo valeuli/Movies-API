@@ -20,7 +20,7 @@ class SetupHelper:
         user_data = service.get_user_by_email(email)
         if not user_data:
             hashed_password = BcryptPasswordHasher.hash_password(password)
-            user_data = service.create_object(
+            user_data = service.repository.create_object(
                 {
                     "email": email,
                     "password": hashed_password,

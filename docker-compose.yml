@@ -1,0 +1,24 @@
+version: "3.9"
+services:
+  app:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongodb
+    environment:
+      - SQL_DATABASE_URL=${SQL_DATABASE_URL}
+      - MONGO_DATABASE_URL=${MONGO_DATABASE_URL}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
+      - SECRET_KEY=${SECRET_KEY}
+      - ALGORITHM=${ALGORITHM}
+      - REPOSITORY_TYPE=${REPOSITORY_TYPE}
+      - MONGO_DB_NAME=${MONGO_DB_NAME}
+    container_name: movies-api
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
