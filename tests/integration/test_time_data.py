@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app
+from main import app
 from app.routers.time_data import time_router
 
 app.include_router(time_router, prefix="/time")

@@ -4,9 +4,16 @@ from fastapi import APIRouter, Depends, Query
 from fastapi import HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
-from app.database_settings import SessionLocal
+from app.database_settings import get_session_local
 from app.schemas.movie import MovieCreate, MovieResponse
 from app.services.movie_service import MovieService
+from app.str_doc.movie import (
+    create_movie_responses,
+    movie_public_responses,
+    movie_update_responses,
+    movie_user_responses,
+    movie_delete_responses,
+)
 from app.utils.auth_user import validate_current_user, get_current_user
 
 oauth2_scheme = OAuth2PasswordBearer(
@@ -19,23 +26,17 @@ movie_router = APIRouter()
     "/create",
     status_code=201,
     response_model=MovieResponse,
-    responses={
-        201: {"description": "A new movie was successfully created."},
-        401: {
-            "description": "User does not have permission to perform this action. Needs authentication."
-        },
-        422: {"description": "The body of the request is missing a required field."},
-    },
+    responses=create_movie_responses,
 )
 def create_movie(
     movie_data: MovieCreate,
     token: str = Depends(oauth2_scheme),
+    session_database=Depends(get_session_local),
 ):
     """
     Creates a new movie associated with the authenticated user.
     The movie can be private or public.
     """
-    session_database = SessionLocal()
     current_user = get_current_user(token, session_database)
     if not current_user:
         detail = {
@@ -57,15 +58,17 @@ def create_movie(
     return new_movie
 
 
-@movie_router.get("/public", response_model=List[MovieResponse])
+@movie_router.get(
+    "/public", response_model=List[MovieResponse], responses=movie_public_responses
+)
 def get_public_movies(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
+    session_database=Depends(get_session_local),
 ):
     """
     Retrieve all public movies with pagination.
     """
-    session_database = SessionLocal()
     movie_service = MovieService(session_database)
     offset = (page - 1) * page_size
     public_movies = movie_service.repository.get_objects_by_filters(
@@ -73,10 +76,16 @@ def get_public_movies(
         offset=offset,
         limit=page_size,
     )
+    if not public_movies:
+        return []
     return movie_service.repository.to_schema(public_movies, MovieResponse)
 
 
-@movie_router.get("/user", response_model=List[MovieResponse])
+@movie_router.get(
+    "/user",
+    response_model=List[MovieResponse],
+    responses=movie_user_responses,
+)
 def get_user_movies(
     token: str = Depends(oauth2_scheme),
     is_public: bool = Query(
@@ -85,11 +94,11 @@ def get_user_movies(
     ),
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
+    session_database=Depends(get_session_local),
 ):
     """
     Retrieve all movies public and private created by the authenticated user.
     """
-    session_database = SessionLocal()
     current_user = validate_current_user(token, session_database)
     filters = {"user_id": current_user.id}
     if is_public is not None:
@@ -106,11 +115,14 @@ def get_user_movies(
     return movie_service.repository.to_schema(user_movies, MovieResponse)
 
 
-@movie_router.put("/{movie_id}", response_model=MovieResponse)
+@movie_router.put(
+    "/{movie_id}", response_model=MovieResponse, responses=movie_update_responses
+)
 def update_private_movie(
     movie_id: int | str,
     movie_data: dict,
     token: str = Depends(oauth2_scheme),
+    session_database=Depends(get_session_local),
 ):
     """
     Update at least one field of a private movie owned by the authenticated user.
@@ -126,7 +138,6 @@ def update_private_movie(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=detail,
         )
-    session_database = SessionLocal()
     current_user = validate_current_user(token, session_database)
 
     movie_service = MovieService(session_database)
@@ -158,15 +169,17 @@ def update_private_movie(
     return movie_service.repository.to_schema(updated_movie, MovieResponse)
 
 
-@movie_router.delete("/{movie_id}/delete", status_code=204)
+@movie_router.delete(
+    "/{movie_id}/delete", status_code=204, responses=movie_delete_responses
+)
 def delete_movie(
     movie_id: int | str,
     token: str = Depends(oauth2_scheme),
+    session_database=Depends(get_session_local),
 ):
     """
     Delete a private movie owned by the authenticated user.
     """
-    session_database = SessionLocal()
     current_user = validate_current_user(token, session_database)
 
     movie_service = MovieService(session_database)

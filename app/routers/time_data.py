@@ -1,12 +1,17 @@
 from fastapi import APIRouter, HTTPException
 
+from app.str_doc.time_data import get_time_responses
 from app.utils.get_with_retry import get_with_retry
 
 time_router = APIRouter()
 WORLD_TIME_API_URL = "http://worldtimeapi.org/api/timezone"
 
 
-@time_router.get("/{area}/{location}", status_code=200)
+@time_router.get(
+    "/{area}/{location}",
+    status_code=200,
+    responses=get_time_responses,
+)
 def get_time(area: str, location: str, region: str = None):
     """
     Retrieves time data for an area/location and an optional parameter region.

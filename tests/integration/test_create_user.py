@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app
+from main import app
 from app.services.user_service import UserService
 from app.utils.password_hasher import BcryptPasswordHasher
 from tests.testing_helper import SetupHelper

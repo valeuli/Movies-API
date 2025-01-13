@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from app.main import app
+from main import app
 from app.services.movie_service import MovieService
 from app.services.user_service import UserService
 from app.utils.jwt_handler import create_access_token
