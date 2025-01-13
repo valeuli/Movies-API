@@ -73,6 +73,12 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 docker run -d -p 27017:27017 --name movies-mongo mongo
 ```
 
+#### 4.1 Populating the Database (SQLite only)
+If you are using SQLite and want to pre-populate the database with public movies, you can run the following script:
+```
+python populate_database.py
+```
+This script inserts sample public movies into the SQLite database.
 ### **5. Run the application**
 
 Start the FastAPI application using Uvicorn:
