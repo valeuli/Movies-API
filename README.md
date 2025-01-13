@@ -78,7 +78,7 @@ docker run -d -p 27017:27017 --name movies-mongo mongo
 Start the FastAPI application using Uvicorn:
 
 ```
-uvicorn app.main:app --reload
+uvicorn main:app --reload
 ```
 
 The API will be available at: http://localhost:8000
