@@ -1,10 +1,13 @@
-from sqlalchemy.orm import Session
 from typing import Type, TypeVar, Generic, List, Dict, Any
+
+from sqlalchemy.orm import Session
+
+from app.repositories.base_repository import BaseRepository
 
 T = TypeVar("T")
 
 
-class CRUDService(Generic[T]):
+class SQLRepository(BaseRepository[T], Generic[T]):
     """
     Generic CRUD service for models.
     """

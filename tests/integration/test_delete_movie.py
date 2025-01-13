@@ -30,8 +30,7 @@ class TestDeleteMovie:
         self.valid_token = create_access_token({"email": self.user_email})
 
         self.movie_service = MovieService(self.db)
-        self.movie = MovieService.create_object(
-            self.movie_service,
+        self.movie = self.movie_service.repository.create_object(
             {
                 "title": "Test Movie",
                 "description": "A private romantic movie.",
@@ -91,7 +90,7 @@ class TestDeleteMovie:
         """
         headers = {"Authorization": f"Bearer {self.valid_token}"}
         response = client.delete(f"movie/{self.movie.id}/delete", headers=headers)
-        movie_in_db = self.movie_service.get_object(self.movie.id)
+        movie_in_db = self.movie_service.repository.get_object(self.movie.id)
 
         assert response.status_code == 204
         assert response.text == ""

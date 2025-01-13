@@ -18,7 +18,11 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    lifespan=lifespan,
+    title="Movies API",
+    description="This API allows users to create, read, update, and delete movie data.",
+)
 
 
 @app.exception_handler(RequestValidationError)

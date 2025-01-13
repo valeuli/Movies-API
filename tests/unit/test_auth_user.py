@@ -24,13 +24,13 @@ class TestValidateCurrentUser:
         """
         Test to validate a user with a valid token.
         """
-        user_service = UserService(db=self.session_db)
+        user_service = UserService(self.session_db)
         user_email = "user@example.com"
         password = "password."
         created_user = SetupHelper.create_test_user(user_service, user_email, password)
         token_user = create_access_token({"email": user_email})
-        result = validate_current_user(token_user, self.session_db)
-        assert result == created_user
+        validate_user = validate_current_user(token_user, self.session_db)
+        assert validate_user.email == created_user.email
 
     def test_validate_current_user_invalid_token(self):
         """
@@ -64,7 +64,7 @@ class TestGetCurrentUser:
         Initial configuration for every test.
         """
         self.session_db = test_db
-        self.user_service = UserService(db=self.session_db)
+        self.user_service = UserService(self.session_db)
         self.user_email = "user1@example.com"
         self.password = "secure_password"
         self.created_user = SetupHelper.create_test_user(
@@ -76,9 +76,9 @@ class TestGetCurrentUser:
         Test to valid token and the user exists in the database.
         """
         valid_token = create_access_token({"email": self.user_email})
-        result = get_current_user(valid_token, self.session_db)
+        validate_user = get_current_user(valid_token, self.session_db)
 
-        assert result == self.created_user
+        assert validate_user.email == self.created_user.email
 
     def test_get_current_user_invalid_token(self):
         """

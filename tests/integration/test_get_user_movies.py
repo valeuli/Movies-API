@@ -41,7 +41,7 @@ class TestGetUserMovies:
         ]
 
         for movie in self.user_movies:
-            MovieService.create_object(self.movie_service, movie)
+            self.movie_service.repository.create_object(movie)
 
     def test_get_user_movies_all(self):
         """
