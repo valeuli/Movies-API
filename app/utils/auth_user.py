@@ -1,7 +1,6 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.database_settings import SessionLocal
 from app.services.user_service import UserService
 from app.utils.jwt_handler import decode_access_token
 
@@ -19,8 +18,7 @@ def get_current_user(token: str, session_database):
     if email is None:
         return None
 
-    db = SessionLocal()
-    user_service = UserService(db)
+    user_service = UserService(session_database)
     user = user_service.get_user_by_email(email)
 
     return user

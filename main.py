@@ -22,6 +22,7 @@ app = FastAPI(
     lifespan=lifespan,
     title="Movies API",
     description="This API allows users to create, read, update, and delete movie data.",
+    version="1.0",
 )
 
 

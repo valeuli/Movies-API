@@ -47,7 +47,9 @@ Copy the `.env.example` file in the root directory and change the following cont
 #### Repository type: sqlite or mongodb
 ```
 REPOSITORY_TYPE="sqlite"
+SQL_DATABASE_URL=<URL>
 ```
+Note: You can use `sqlite:///../movies_project.db`
 
 #### MongoDB configuration (only required if using MongoDB)
 ```
@@ -117,5 +119,5 @@ pip install pytest
 
 - Run the tests:
 ```
-pytest
+export IS_TEST=true; pytest
 ```
